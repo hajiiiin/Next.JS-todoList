@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -17,12 +18,14 @@ export default function RootLayout({
       <body className="antialiased">
         <header className="header-container">
           <div className="logo-container">
-            <Image
-              src="/doit_logo.png"
-              alt="Do It Logo"
-              width={100}
-              height={50}
-            />
+            <Link href="/">
+              <Image
+                src="/doit_logo.png"
+                alt="Do It Logo"
+                width={100}
+                height={50}
+              />
+            </Link>
           </div>
         </header>
         <main>{children}</main>
