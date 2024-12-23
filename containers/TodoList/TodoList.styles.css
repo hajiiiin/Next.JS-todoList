@@ -14,8 +14,10 @@
 
 .task-input {
   flex: 1;
-  padding: 10px 20px;
-  font-size: 16px;
+  align-items: center;
+  margin: 20px 10px;
+  padding: 13px 25px 10px 25px;
+  font-size: 18px;
   width: 1016px;
   height: 56px;
   border: 2px solid #0f172a;
@@ -23,6 +25,8 @@
   background-color: #f1f5f9;
   box-shadow: 4px 4px 0px rgba(0, 0, 0, 1);
   outline: none;
+  box-sizing: border-box;
+  overflow: hidden; /* 스크롤바 제거 */
 }
 
 .task-input::placeholder {
@@ -56,23 +60,114 @@
 .todo-section,
 .done-section {
   flex: 1;
+  margin-bottom: 30px;
 }
 
-.todo-items,
+.todo-item label {
+  display: inline-flex; /* 가로 정렬 */
+  align-items: center; /* 수직 가운데 정렬 */
+  gap: 15px; /* 아이템 간 간격 */
+}
+
+.todo-items {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.todo-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 10px;
+  height: 50px;
+  border: 2px solid #000000;
+  border-radius: 30px;
+  background-color: #ffffff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  font-size: 16px;
+  color: #333;
+  cursor: pointer;
+}
+
+.todo-item:hover {
+  border-color: #007bff;
+  background-color: #f0f8ff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* 기본 체크박스 숨기기 */
+.todo-item input[type="checkbox"],
+.done-item input[type="checkbox"] {
+  display: none;
+}
+
+/* 커스텀 체크박스 컨테이너 */
+.checkbox-custom {
+  width: 30px;
+  height: 30px;
+  border: 2px solid #333;
+  border-radius: 50%;
+  background-color: #fcf8df;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* 체크된 상태 스타일 */
+input[type="checkbox"]:checked + .checkbox-custom {
+  background-color: #7c3aed; /* 체크 시 배경색 (녹색) */
+  border-color: #7c3aed;
+}
+
+/* 체크박스 내부 아이콘 (체크 표시) */
+.checkbox-custom::after {
+  content: "✔"; /* 체크 표시 */
+  font-size: 14px;
+  color: white;
+  display: none; /* 기본 숨기기 */
+}
+
+/* 체크된 상태에서 체크 표시 보이기 */
+input[type="checkbox"]:checked + .checkbox-custom::after {
+  display: block;
+}
+
+.done-item label {
+  display: inline-flex; /* 가로 정렬 */
+  align-items: center; /* 수직 가운데 정렬 */
+  gap: 15px; /* 아이템 간 간격 */
+}
+
 .done-items {
-  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.todo-item,
 .done-item {
   display: flex;
   align-items: center;
-  margin-bottom: 10px;
+  justify-content: space-between;
+  padding: 10px 10px;
+  height: 50px;
+  border: 2px solid #000000;
+  border-radius: 30px;
+  background-color: #ede9fe;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  font-size: 16px;
+  color: #333;
+  cursor: pointer;
 }
 
-.todo-item input,
+.done-text {
+  text-decoration: line-through;
+}
+
 .done-item input {
-  margin-right: 10px;
+  margin-right: 10px; /* 체크박스와 텍스트 간격 */
 }
 
 /* 미디어 쿼리: width가 744px 이하일 때 */
@@ -85,5 +180,50 @@
   .todo-section,
   .done-section {
     flex: none; /* 기본 크기로 설정 */
+  }
+}
+
+@media (max-width: 375px) {
+  .input-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .task-input {
+    flex: 2;
+    font-size: 14px;
+    width: 100%;
+    height: 50px;
+    padding: 8px 15px;
+  }
+
+  .add-task-button::after {
+    flex: 0;
+    content: "+"; /* 작은 화면에서는 "+"만 표시 */
+    padding: 10px 20px;
+    font-size: 16px;
+    width: 56px;
+    height: 56px;
+    border: 2px solid #0f172a;
+    background-color: #e2e8f0;
+    box-shadow: 3px 3px 0px rgba(0, 0, 0, 1);
+    color: black;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .add-task-button {
+    visibility: hidden; /* 기본 텍스트 숨기기 */
+    position: relative;
+  }
+
+  .add-task-button::after {
+    visibility: visible;
+    position: absolute;
+    top: 0;
+    left: 0;
   }
 }

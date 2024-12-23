@@ -11,6 +11,14 @@ type TodoItem = {
   status: "todo" | "done";
 };
 
+const generateUuid = () => {
+  if (typeof window !== "undefined") {
+    const { v4: uuidv4 } = require("uuid");
+    return uuidv4();
+  }
+  return ""; // SSR 환경에서는 빈 문자열 반환
+};
+
 export default function TodoList() {
   const [task, setTask] = useState(""); // 입력된 할 일을 관리
   const [todos, setTodos] = useState<TodoItem[]>([]); // todo와 done 목록 관리
@@ -20,7 +28,7 @@ export default function TodoList() {
     if (task.trim()) {
       setTodos((prev) => [
         ...prev,
-        { id: uuidv4(), text: task.trim(), status: "todo" },
+        { id: generateUuid(), text: task.trim(), status: "todo" },
       ]);
       setTask(""); // 입력 필드 초기화
     }
@@ -49,6 +57,12 @@ export default function TodoList() {
           className="task-input"
           value={task}
           onChange={handleInputChange}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault(); // 기본 Enter 동작 방지
+              addTask(); // todo 추가 이벤트
+            }
+          }}
           placeholder="할 일을 입력해주세요"
         />
         <button className="add-task-button" onClick={addTask}>
@@ -59,7 +73,13 @@ export default function TodoList() {
       {/* TODO와 DONE 영역 */}
       <div className="todo-done-container">
         <div className="todo-section">
-          <Image src="/todo.png" alt="TODO" width={101} height={36} />
+          <Image
+            src="/todo.png"
+            alt="TODO"
+            width={101}
+            height={36}
+            style={{ marginBottom: "10px" }}
+          />
           <div className="todo-items">
             {todos
               .filter((todo) => todo.status === "todo")
@@ -70,6 +90,7 @@ export default function TodoList() {
                       type="checkbox"
                       onChange={() => toggleTaskStatus(todo.id)}
                     />
+                    <span className="checkbox-custom"></span>
                     {todo.text}
                   </label>
                 </div>
@@ -78,7 +99,13 @@ export default function TodoList() {
         </div>
 
         <div className="done-section">
-          <Image src="/done.png" alt="DONE" width={101} height={36} />
+          <Image
+            src="/done.png"
+            alt="DONE"
+            width={101}
+            height={36}
+            style={{ marginBottom: "10px" }}
+          />
           <div className="done-items">
             {todos
               .filter((todo) => todo.status === "done")
@@ -90,7 +117,8 @@ export default function TodoList() {
                       checked
                       onChange={() => toggleTaskStatus(todo.id)}
                     />
-                    {todo.text}
+                    <span className="checkbox-custom"></span>
+                    <span className="done-text">{todo.text}</span>
                   </label>
                 </div>
               ))}
