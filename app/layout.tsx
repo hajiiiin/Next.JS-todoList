@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Image from "next/image";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -27,7 +28,15 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <header className="flex items-center justify-between p-4 bg-white shadow-md">
+          <Image
+            src="/doit_logo.png" // 업로드된 로고 경로
+            alt="Do It Logo"
+            width={100}
+            height={50}
+          />
+        </header>
+        <main className="p-4">{children}</main>
       </body>
     </html>
   );

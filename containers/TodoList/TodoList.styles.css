@@ -1,0 +1,89 @@
+.todo-list-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.input-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.task-input {
+  flex: 1;
+  padding: 10px 20px;
+  font-size: 16px;
+  width: 1016px;
+  height: 56px;
+  border: 2px solid #0f172a;
+  border-radius: 30px;
+  background-color: #f1f5f9;
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 1);
+  outline: none;
+}
+
+.task-input::placeholder {
+  color: #9aa5c3;
+}
+
+.add-task-button {
+  padding: 10px 20px;
+  font-size: 16px;
+  width: 168px;
+  height: 56px;
+  border: 2px solid #0f172a;
+  background-color: #e2e8f0;
+  box-shadow: 3px 3px 0px rgba(0, 0, 0, 1);
+  color: black;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.add-task-button:hover {
+  transform: scale(1.01);
+}
+
+.todo-done-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.todo-section,
+.done-section {
+  flex: 1;
+}
+
+.todo-items,
+.done-items {
+  margin-top: 10px;
+}
+
+.todo-item,
+.done-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.todo-item input,
+.done-item input {
+  margin-right: 10px;
+}
+
+/* 미디어 쿼리: width가 744px 이하일 때 */
+@media (max-width: 744px) {
+  .todo-done-container {
+    flex-direction: column; /* 세로 정렬 */
+    gap: 10px;
+  }
+
+  .todo-section,
+  .done-section {
+    flex: none; /* 기본 크기로 설정 */
+  }
+}
