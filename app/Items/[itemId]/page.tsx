@@ -19,12 +19,12 @@ export default function ItemDetails({
   params: { itemId: string };
 }) {
   const router = useRouter();
-  const { itemId } = params;
+  const searchParams = useSearchParams();
+  const itemId = searchParams.get("itemId");
 
   const [todo, setTodo] = useState<TodoItem | null>(null);
   const [memo, setMemo] = useState("");
   const [uploadedImage, setUploadedImage] = useState<File | null>(null);
-  const [hasChanges, setHasChanges] = useState(false);
   const [isModified, setIsModified] = useState(false);
 
   const API_URL = `https://assignment-todolist-api.vercel.app/api/your-tenant-id/items`;
@@ -58,7 +58,7 @@ export default function ItemDetails({
 
   // 수정 핸들러
   const handleSave = () => {
-    if (!hasChanges) return; // 변경사항 없으면 동작 안 함
+    if (!isModified) return; // 변경사항 없으면 동작 안 함
     const savedTodos = JSON.parse(localStorage.getItem("todos") || "[]");
     const updatedTodos = savedTodos.map((todo: TodoItem) =>
       todo.id === itemId
