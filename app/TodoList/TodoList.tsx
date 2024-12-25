@@ -126,18 +126,16 @@ export default function TodoList() {
               {todos
                 .filter((todo) => todo.status === "todo")
                 .map((todo) => (
-                  <div
-                    key={todo.id}
-                    className="todo-item"
-                    onClick={() => handleTodoClick(todo.id)}
-                  >
+                  <div key={todo.id} className="todo-item">
                     <label>
                       <input
                         type="checkbox"
                         onChange={() => toggleTaskStatus(todo.id)}
                       />
                       <span className="checkbox-custom"></span>
-                      {todo.text}
+                      <span onClick={() => handleTodoClick(todo.id)}>
+                        {todo.text}
+                      </span>
                     </label>
                   </div>
                 ))}
@@ -179,7 +177,12 @@ export default function TodoList() {
                         onChange={() => toggleTaskStatus(todo.id)}
                       />
                       <span className="checkbox-custom"></span>
-                      <span className="done-text">{todo.text}</span>
+                      <span
+                        className="done-text"
+                        onClick={() => handleTodoClick(todo.id)}
+                      >
+                        {todo.text}
+                      </span>
                     </label>
                   </div>
                 ))}

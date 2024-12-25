@@ -19,8 +19,8 @@ export default function ItemDetails({
   params: { itemId: string };
 }) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const itemId = searchParams.get("itemId");
+  //const searchParams = useSearchParams();
+  const itemId = params.itemId;
 
   const [todo, setTodo] = useState<TodoItem | null>(null);
   const [memo, setMemo] = useState("");
@@ -91,7 +91,7 @@ export default function ItemDetails({
     <div className="item-details-container">
       <div key={todo.id} className="todo-item">
         <label>
-          <Image src="todo-checkbox" alt="Save" width={32} height={32} />
+          <Image src="/todo-checkbox.png" alt="Save" width={32} height={32} />
           {todo.text}
         </label>
       </div>

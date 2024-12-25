@@ -106,3 +106,9 @@
   color: #333;
   cursor: pointer;
 }
+
+.todo-item label {
+  display: inline-flex; /* 가로 정렬 */
+  align-items: center; /* 수직 가운데 정렬 */
+  gap: 15px; /* 아이템 간 간격 */
+}
