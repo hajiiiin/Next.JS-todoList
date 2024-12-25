@@ -20,10 +20,10 @@ export default function RootLayout({
           <div className="logo-container">
             <Link href="/">
               <Image
-                src="/doit_logo.png"
+                src="/logo-big.png"
                 alt="Do It Logo"
-                width={100}
-                height={50}
+                width={1920}
+                height={60}
               />
             </Link>
           </div>

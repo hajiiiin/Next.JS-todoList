@@ -27,6 +27,7 @@
   outline: none;
   box-sizing: border-box;
   overflow: hidden; /* 스크롤바 제거 */
+  white-space: nowrap; /* 텍스트가 줄바꿈되지 않도록 설정 */
 }
 
 .task-input::placeholder {
@@ -54,7 +55,7 @@
 .todo-done-container {
   display: flex;
   justify-content: space-between;
-  gap: 20px;
+  gap: 200px;
 }
 
 .todo-section,
