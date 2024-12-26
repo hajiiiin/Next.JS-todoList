@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, ChangeEvent } from "react";
-import { v4 as uuidv4 } from "uuid";
+import { useRouter } from "next/navigation";
+import { useState, ChangeEvent, useEffect } from "react";
 import Image from "next/image";
 import "./TodoList.styles.css";
 
@@ -13,7 +13,16 @@ export type TodoItem = {
 
 export const TENANT_ID = "your-tenant-id";
 
+const generateUuid = () => {
+  if (typeof window !== "undefined") {
+    const { v4: uuidv4 } = require("uuid");
+    return uuidv4();
+  }
+  return ""; // SSR 환경에서는 빈 문자열 반환
+};
+
 export default function TodoList() {
+  const router = useRouter();
   const [task, setTask] = useState(""); // 입력된 할 일을 관리
   const [todos, setTodos] = useState<TodoItem[]>([]); // todo와 done 목록 관리
   const [isSmallScreen, setIsSmallScreen] = useState(false);
@@ -21,90 +30,52 @@ export default function TodoList() {
   // API URL
   const API_URL = `https://assignment-todolist-api.vercel.app/api/${TENANT_ID}/items`;
 
-  // 서버에서 데이터 가져오기
-  const fetchTodos = async () => {
-    try {
-      const response = await fetch(API_URL, { method: "GET" });
-      if (!response.ok) throw new Error("Failed to fetch todos");
-      const data = await response.json();
-      setTodos(data); // 데이터를 상태에 저장
-    } catch (error) {
-      console.error("Error fetching todos:", error);
-    }
-  };
-
-  // 초기 데이터 로드 및 화면 크기 감지
+  // 데이터 로드 (localStorage)
   useEffect(() => {
-    fetchTodos();
-
-    const handleResize = () => {
-      setIsSmallScreen(window.innerWidth <= 744);
-    };
-
-    handleResize(); // 초기화
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
+    if (typeof window !== "undefined") {
+      const savedTodos = localStorage.getItem("todos");
+      if (savedTodos) {
+        setTodos(JSON.parse(savedTodos));
+      }
+    }
   }, []);
 
+  // 데이터 저장 (localStorage)
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("todos", JSON.stringify(todos));
+    }
+  }, [todos]);
+
   // 할 일 추가 핸들러
-  const addTask = async () => {
+  const addTask = () => {
     if (task.trim()) {
-      try {
-        const newTodo = { text: task.trim(), status: "todo" };
-        const response = await fetch(API_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(newTodo),
-        });
-        if (!response.ok) throw new Error("Failed to add todo");
-        const createdTodo = await response.json();
-        setTodos((prev) => [...prev, createdTodo]); // 로컬 상태 업데이트
-        setTask(""); // 입력 필드 초기화
-      } catch (error) {
-        console.error("Error adding todo:", error);
-      }
+      setTodos((prev) => [
+        ...prev,
+        { id: generateUuid(), text: task.trim(), status: "todo" },
+      ]);
+      setTask(""); // 입력 필드 초기화
     }
   };
 
   // 상태 변경 핸들러 (todo ↔ done)
-  const toggleTaskStatus = async (
-    id: string,
-    currentStatus: "todo" | "done"
-  ) => {
-    try {
-      const updatedTodo = {
-        status: currentStatus === "todo" ? "done" : "todo",
-      };
-      const response = await fetch(`${API_URL}/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updatedTodo),
-      });
-      if (!response.ok) throw new Error("Failed to update todo");
-      const updatedItem = await response.json();
-      setTodos((prev) =>
-        prev.map((todo) => (todo.id === id ? updatedItem : todo))
-      );
-    } catch (error) {
-      console.error("Error updating todo:", error);
-    }
+  const toggleTaskStatus = (id: string) => {
+    setTodos((prev) =>
+      prev.map((todo) =>
+        todo.id === id
+          ? { ...todo, status: todo.status === "todo" ? "done" : "todo" }
+          : todo
+      )
+    );
   };
-
-  // 초기 데이터 로드
-  useEffect(() => {
-    fetchTodos();
-  }, []);
 
   // 입력 필드 핸들러
   const handleInputChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     setTask(e.target.value);
+  };
+
+  const handleTodoClick = (itemId: string) => {
+    router.push(`/Items/${itemId}`);
   };
 
   return (
@@ -159,10 +130,12 @@ export default function TodoList() {
                     <label>
                       <input
                         type="checkbox"
-                        onChange={() => toggleTaskStatus(todo.id, todo.status)}
+                        onChange={() => toggleTaskStatus(todo.id)}
                       />
                       <span className="checkbox-custom"></span>
-                      {todo.text}
+                      <span onClick={() => handleTodoClick(todo.id)}>
+                        {todo.text}
+                      </span>
                     </label>
                   </div>
                 ))}
@@ -201,10 +174,15 @@ export default function TodoList() {
                       <input
                         type="checkbox"
                         checked
-                        onChange={() => toggleTaskStatus(todo.id, todo.status)}
+                        onChange={() => toggleTaskStatus(todo.id)}
                       />
                       <span className="checkbox-custom"></span>
-                      <span className="done-text">{todo.text}</span>
+                      <span
+                        className="done-text"
+                        onClick={() => handleTodoClick(todo.id)}
+                      >
+                        {todo.text}
+                      </span>
                     </label>
                   </div>
                 ))}

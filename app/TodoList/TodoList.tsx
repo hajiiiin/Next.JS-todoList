@@ -6,20 +6,12 @@ import Image from "next/image";
 import "./TodoList.styles.css";
 
 export type TodoItem = {
-  id: string;
-  text: string;
-  status: "todo" | "done";
+  id: number;
+  name: string;
+  isCompleted: boolean;
 };
 
-export const TENANT_ID = "your-tenant-id";
-
-const generateUuid = () => {
-  if (typeof window !== "undefined") {
-    const { v4: uuidv4 } = require("uuid");
-    return uuidv4();
-  }
-  return ""; // SSR 환경에서는 빈 문자열 반환
-};
+export const TENANT_ID = "hihajin";
 
 export default function TodoList() {
   const router = useRouter();
@@ -30,43 +22,74 @@ export default function TodoList() {
   // API URL
   const API_URL = `https://assignment-todolist-api.vercel.app/api/${TENANT_ID}/items`;
 
-  // 데이터 로드 (localStorage)
+  // 데이터 로드 (GET 요청)
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const savedTodos = localStorage.getItem("todos");
-      if (savedTodos) {
-        setTodos(JSON.parse(savedTodos));
+    const fetchTodos = async () => {
+      try {
+        const response = await fetch(API_URL);
+        if (!response.ok) {
+          throw new Error("Failed to fetch todos");
+        }
+        const data = await response.json();
+        setTodos(data);
+      } catch (error) {
+        console.error(error);
       }
-    }
+    };
+
+    fetchTodos();
   }, []);
 
-  // 데이터 저장 (localStorage)
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("todos", JSON.stringify(todos));
-    }
-  }, [todos]);
-
-  // 할 일 추가 핸들러
-  const addTask = () => {
+  // 할 일 추가 핸들러 (POST 요청)
+  const addTask = async () => {
     if (task.trim()) {
-      setTodos((prev) => [
-        ...prev,
-        { id: generateUuid(), text: task.trim(), status: "todo" },
-      ]);
-      setTask(""); // 입력 필드 초기화
+      try {
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ name: task.trim() }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to add task");
+        }
+
+        const newTask = await response.json();
+        setTodos((prev) => [...prev, newTask]);
+        setTask(""); // 입력 필드 초기화
+      } catch (error) {
+        console.error(error);
+      }
     }
   };
 
-  // 상태 변경 핸들러 (todo ↔ done)
-  const toggleTaskStatus = (id: string) => {
-    setTodos((prev) =>
-      prev.map((todo) =>
-        todo.id === id
-          ? { ...todo, status: todo.status === "todo" ? "done" : "todo" }
-          : todo
-      )
-    );
+  // 상태 변경 핸들러 (PUT 요청)
+  const toggleTaskStatus = async (id: number) => {
+    try {
+      const taskToUpdate = todos.find((todo) => todo.id === id);
+      if (!taskToUpdate) return;
+
+      const response = await fetch(`${API_URL}/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ ...taskToUpdate, isCompleted: !taskToUpdate.isCompleted }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update task status");
+      }
+
+      const updatedTask = await response.json();
+      setTodos((prev) =>
+        prev.map((todo) => (todo.id === id ? { ...todo, isCompleted: updatedTask.isCompleted } : todo))
+      );
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   // 입력 필드 핸들러
@@ -74,7 +97,7 @@ export default function TodoList() {
     setTask(e.target.value);
   };
 
-  const handleTodoClick = (itemId: string) => {
+  const handleTodoClick = (itemId: number) => {
     router.push(`/Items/${itemId}`);
   };
 
@@ -109,7 +132,7 @@ export default function TodoList() {
             height={36}
             style={{ marginBottom: "10px" }}
           />
-          {todos.filter((todo) => todo.status === "todo").length === 0 ? (
+          {todos.filter((todo) => !todo.isCompleted).length === 0 ? (
             <div className="empty-state">
               <Image
                 src={
@@ -124,17 +147,18 @@ export default function TodoList() {
           ) : (
             <div className="todo-items">
               {todos
-                .filter((todo) => todo.status === "todo")
+                .filter((todo) => !todo.isCompleted)
                 .map((todo) => (
                   <div key={todo.id} className="todo-item">
                     <label>
                       <input
                         type="checkbox"
+                        checked={todo.isCompleted}
                         onChange={() => toggleTaskStatus(todo.id)}
                       />
                       <span className="checkbox-custom"></span>
                       <span onClick={() => handleTodoClick(todo.id)}>
-                        {todo.text}
+                        {todo.name}
                       </span>
                     </label>
                   </div>
@@ -152,7 +176,7 @@ export default function TodoList() {
             height={36}
             style={{ marginBottom: "10px" }}
           />
-          {todos.filter((todo) => todo.status === "done").length === 0 ? (
+          {todos.filter((todo) => todo.isCompleted).length === 0 ? (
             <div className="empty-state">
               <Image
                 src={
@@ -167,13 +191,13 @@ export default function TodoList() {
           ) : (
             <div className="done-items">
               {todos
-                .filter((todo) => todo.status === "done")
+                .filter((todo) => todo.isCompleted)
                 .map((todo) => (
                   <div key={todo.id} className="done-item">
                     <label>
                       <input
                         type="checkbox"
-                        checked
+                        checked={todo.isCompleted}
                         onChange={() => toggleTaskStatus(todo.id)}
                       />
                       <span className="checkbox-custom"></span>
@@ -181,7 +205,7 @@ export default function TodoList() {
                         className="done-text"
                         onClick={() => handleTodoClick(todo.id)}
                       >
-                        {todo.text}
+                        {todo.name}
                       </span>
                     </label>
                   </div>
