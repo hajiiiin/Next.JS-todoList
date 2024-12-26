@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import "../Items.styles.css";
@@ -8,7 +8,7 @@ import "../Items.styles.css";
 type TodoItem = {
   id: string;
   text: string;
-  status: "todo" | "done";
+  isCompleted: boolean;
   memo?: string;
   image?: string;
 };
@@ -27,62 +27,97 @@ export default function ItemDetails({
   const [uploadedImage, setUploadedImage] = useState<File | null>(null);
   const [isModified, setIsModified] = useState(false);
 
-  const API_URL = `https://assignment-todolist-api.vercel.app/api/your-tenant-id/items`;
-
+  // API URL
+  const API_URL = `https://assignment-todolist-api.vercel.app/api/${TENANT_ID}/items`;
+  
   // 데이터 로드
   useEffect(() => {
-    const savedTodos = JSON.parse(localStorage.getItem("todos") || "[]");
-    const item = savedTodos.find((todo: TodoItem) => todo.id === itemId);
-    if (item) {
-      setTodo(item);
-      setMemo(item.memo || "");
-    } else {
-      router.push("/"); // 할 일이 없으면 홈으로 리다이렉트
-    }
+    const fetchTodo = async () => {
+      try {
+        const response = await fetch(`${API_URL}/items/${itemId}`);
+        if (!response.ok) throw new Error("Failed to fetch item");
+        const data = await response.json();
+        setTodo(data);
+        setMemo(data.memo || "");
+      } catch (error) {
+        console.error(error);
+        router.push("/"); // 에러 시 홈으로 리다이렉트
+      }
+    };
+
+    fetchTodo();
   }, [itemId, router]);
 
   // 메모 변경 감지
   const handleMemoChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setMemo(e.target.value);
-    setIsModified(true); // 변경 시 활성화
+    setIsModified(true);
   };
 
-  // 이미지 변경 감지
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setUploadedImage(file);
-      setIsModified(true); // 변경 시 활성화
-    }
+  // 이미지 업로드
+  const uploadImage = async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await fetch(`${API_URL}/images/upload`, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) throw new Error("Failed to upload image");
+    const data = await response.json();
+    return data.url;
   };
 
   // 수정 핸들러
-  const handleSave = () => {
-    if (!isModified) return; // 변경사항 없으면 동작 안 함
-    const savedTodos = JSON.parse(localStorage.getItem("todos") || "[]");
-    const updatedTodos = savedTodos.map((todo: TodoItem) =>
-      todo.id === itemId
-        ? {
-            ...todo,
-            memo,
-            image: uploadedImage
-              ? URL.createObjectURL(uploadedImage)
-              : todo.image,
-          }
-        : todo
-    );
-    localStorage.setItem("todos", JSON.stringify(updatedTodos));
-    router.push("/");
+  const handleSave = async () => {
+    try {
+      if (!todo) return;
+
+      let imageUrl = todo.imageUrl;
+      if (uploadedImage) {
+        imageUrl = await uploadImage(uploadedImage);
+      }
+
+      const response = await fetch(`${API_URL}/items/${itemId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: todo.name,
+          memo,
+          imageUrl,
+          isCompleted: todo.isCompleted,
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to update item");
+      const updatedTodo = await response.json();
+      setTodo(updatedTodo);
+      setIsModified(false);
+      alert("수정되었습니다.");
+    } catch (error) {
+      console.error(error);
+      alert("수정 중 오류가 발생했습니다.");
+    }
   };
 
+
   // 삭제 핸들러
-  const handleDelete = () => {
-    const savedTodos = JSON.parse(localStorage.getItem("todos") || "[]");
-    const updatedTodos = savedTodos.filter(
-      (todo: TodoItem) => todo.id !== itemId
-    );
-    localStorage.setItem("todos", JSON.stringify(updatedTodos));
-    router.push("/");
+  const handleDelete = async () => {
+    try {
+      const response = await fetch(`${API_URL}/items/${itemId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) throw new Error("Failed to delete item");
+      alert("삭제되었습니다.");
+      router.push("/");
+    } catch (error) {
+      console.error(error);
+      alert("삭제 중 오류가 발생했습니다.");
+    }
   };
 
   if (!todo) return <p>Loading...</p>;
@@ -92,7 +127,7 @@ export default function ItemDetails({
       <div key={todo.id} className="todo-item">
         <label>
           <Image src="/todo-checkbox.png" alt="Save" width={32} height={32} />
-          {todo.text}
+          {todo.name}
         </label>
       </div>
 

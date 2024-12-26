@@ -65,33 +65,43 @@ export default function TodoList() {
     }
   };
 
-  // 상태 변경 핸들러 (PUT 요청)
+  // 상태 변경 핸들러 (POST 요청)
   const toggleTaskStatus = async (id: number) => {
     try {
-      const taskToUpdate = todos.find((todo) => todo.id === id);
-      if (!taskToUpdate) return;
+      const todo = todos.find((todo) => todo.id === id);
+      if (!todo) return;
 
-      const response = await fetch(`${API_URL}/${id}`, {
-        method: "PUT",
+      // 로컬 상태에서 반전 처리
+      setTodos((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, isCompleted: !t.isCompleted } : t))
+      );
+
+      // GET 요청으로 최신 데이터 가져오기
+      const response = await fetch(API_URL);
+      if (!response.ok) {
+        throw new Error("Failed to fetch updated todos");
+      }
+  
+      // const updatedTodos = await response.json();
+      // setTodos(updatedTodos); // 로컬 상태 업데이트
+
+      // 서버 동기화
+      await fetch(API_URL, {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ ...taskToUpdate, isCompleted: !taskToUpdate.isCompleted }),
+        body: JSON.stringify({
+          name: todo.name,
+        }),
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to update task status");
-      }
-
-      const updatedTask = await response.json();
-      setTodos((prev) =>
-        prev.map((todo) => (todo.id === id ? { ...todo, isCompleted: updatedTask.isCompleted } : todo))
-      );
     } catch (error) {
-      console.error(error);
+      console.error("Error in toggleTaskStatus:", error);
+      alert("작업 상태를 업데이트하는 동안 오류가 발생했습니다.");
     }
   };
-
+  
+  
   // 입력 필드 핸들러
   const handleInputChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     setTask(e.target.value);
@@ -151,12 +161,10 @@ export default function TodoList() {
                 .map((todo) => (
                   <div key={todo.id} className="todo-item">
                     <label>
-                      <input
-                        type="checkbox"
-                        checked={todo.isCompleted}
-                        onChange={() => toggleTaskStatus(todo.id)}
-                      />
-                      <span className="checkbox-custom"></span>
+                      <Image src={"/todo-checkbox.png"} alt="Empty TODO"
+                width={30}
+                height={30}
+                onClick={() => toggleTaskStatus(todo.id)}/>
                       <span onClick={() => handleTodoClick(todo.id)}>
                         {todo.name}
                       </span>
@@ -195,13 +203,11 @@ export default function TodoList() {
                 .map((todo) => (
                   <div key={todo.id} className="done-item">
                     <label>
-                      <input
-                        type="checkbox"
-                        checked={todo.isCompleted}
-                        onChange={() => toggleTaskStatus(todo.id)}
-                      />
-                      <span className="checkbox-custom"></span>
-                      <span
+                    <Image src={"/todo-checkbox.png"} alt="Empty TODO"
+                width={30}
+                height={30}
+                onClick={() => toggleTaskStatus(todo.id)}/>
+                <span
                         className="done-text"
                         onClick={() => handleTodoClick(todo.id)}
                       >
