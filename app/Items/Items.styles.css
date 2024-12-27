@@ -37,59 +37,96 @@
   display: flex;
   gap: 20px; /* 이미지와 메모 섹션 사이 간격 */
   align-items: center; /* 이미지와 메모를 세로로 중앙 정렬 */
-  /*justify-content: space-between;  공간을 균등하게 나눔 */
+  justify-content: space-between; /* 공간을 균등하게 나눔 */
   padding: 20px;
+  width: 100%;
 }
 
+/* 이미지 섹션 */
 .image-section {
-  display: flex; /* Flexbox 활성화 */
-  justify-content: center; /* 가로 방향 가운데 정렬 */
-  align-items: center; /* 세로 방향 가운데 정렬 */
-  text-align: center;
-  border: 2px dashed #ccc;
-  border-radius: 12px;
-  background-color: #f9f9f9;
-  width: 384px;
-  height: 311px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: #f5f5f5; /* 배경 색상 */
+  border: 2px dashed #d9d9d9; /* 점선 테두리 */
+  border-radius: 15px;
+  padding: 20px;
+  width: 200px; /* 고정 너비 */
+  height: 311px; /* 고정 높이 */
   position: relative;
+  margin-bottom: 20px;
+}
+
+.img-section-img {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%; /* 둥근 모양 */
+  object-fit: cover;
 }
 
 .add-image-btn {
-  position: absolute; /* 절대 위치 설정 */
-  bottom: 10px; /* 아래쪽 간격 */
-  right: 10px; /* 오른쪽 간격 */
-  width: 64px; /* 버튼 크기 */
-  height: 64px; /* 버튼 크기 */
-  cursor: pointer; /* 클릭 가능한 커서 */
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  cursor: pointer;
 }
 
-.memo-container {
+/* 메모 섹션 */
+.memo-section {
   flex: 2;
-  position: relative;
-  width: 100%;
-  height: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   background-image: url("/memo.png"); /* 배경 이미지 경로 */
   background-size: cover;
   background-position: center;
-  border-radius: 8px;
+  border-radius: 15px;
   border: 1px solid #f0d9a0;
+  padding: 20px;
+  height: 311px; /* 고정 높이 */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* 약간의 그림자 */
+  margin-bottom: 20px;
+}
+
+.memo-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.memo-container h3 {
+  display: flex;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: #92400e;
+}
+
+.memo-text {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  height: 242px;
 }
 
 .memo-textarea {
-  position: absolute;
-  top: 0;
-  left: 0;
   width: 100%;
   height: 100%;
-  background: transparent;
+  text-align: center;
+  flex: 1;
   border: none;
   outline: none;
-  font-size: 16px;
-  font-family: "Arial", sans-serif;
-  line-height: 1.5;
-  color: #333; /* 텍스트 색상 */
-  padding: 20px;
   resize: none;
+  font-size: 16px;
+  padding: 10px;
+  color: #555;
+  background-color: transparent; /* 배경색 투명 */
+  line-height: 1.5;
 }
 
 .button-group {
@@ -124,7 +161,6 @@
   align-items: center;
   justify-content: space-between;
   padding: 10px 10px;
-  height: 50px;
   border: 2px solid #000000;
   border-radius: 30px;
   background-color: #ffffff;
@@ -158,4 +194,47 @@
   font-size: 16px;
   color: #333;
   cursor: pointer;
+}
+
+/* 반응형 스타일 */
+@media (max-width: 744px) {
+  .details-container {
+    flex-direction: column; /* 세로 배치 */
+    gap: 10px; /* 이미지와 메모 섹션 간격 조정 */
+    align-items: center;
+  }
+
+  .image-section {
+    flex: none;
+    width: 100%; /* 너비를 부모 요소에 맞춤 */
+    height: 311px;
+    padding: 10px; /* 내부 여백 축소 */
+  }
+
+  .memo-section {
+    flex: none;
+    width: 100%; /* 너비를 부모 요소에 맞춤 */
+    height: 311px;
+    padding: 15px; /* 내부 여백 축소 */
+    margin-bottom: 0;
+  }
+
+  .memo-textarea {
+    font-size: 14px; /* 폰트 크기 축소 */
+    padding: 8px; /* 내부 여백 축소 */
+  }
+
+  .button-group {
+    flex-direction: column; /* 버튼 세로 배치 */
+    gap: 10px; /* 버튼 간 간격 축소 */
+    width: 100%; /* 버튼 그룹의 너비를 부모 요소에 맞춤 */
+    align-items: center;
+  }
+
+  .save-button,
+  .delete-button {
+    width: 100%; /* 버튼 너비를 부모 요소에 맞춤 */
+    max-width: 300px; /* 최대 너비 설정 */
+    padding: 8px; /* 내부 여백 축소 */
+  }
 }

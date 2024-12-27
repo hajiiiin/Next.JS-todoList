@@ -198,16 +198,33 @@ export default function itemDetails() {
 
       <div className="details-container">
         {/* 이미지 업로드 */}
-        <div className="image-section">
+        <div
+          className="image-section"
+          style={{
+            backgroundImage: uploadedImage
+              ? `url(${URL.createObjectURL(uploadedImage)})`
+              : todo.imageUrl
+              ? `url(${todo.imageUrl})`
+              : "",
+            backgroundSize: "cover",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
           <img
             className="img-section-img"
             src={
               uploadedImage
                 ? URL.createObjectURL(uploadedImage)
-                : todo.imageUrl || "/default-image.png"
+                : "/default-image.png"
             }
             alt="Uploaded"
-            style={{ width: 64, height: 64 }}
+            style={{
+              display: !uploadedImage ? "block" : "none", // 조건에 따라 표시 여부 설정
+              width: 64,
+              height: 64,
+            }}
           />
           {/* 숨겨진 파일 입력 */}
           <input
@@ -218,8 +235,8 @@ export default function itemDetails() {
           />
           <Image
             className="add-image-btn"
-            src="/add-image-btn.png"
-            alt="add image"
+            src={uploadedImage ? "/image-update.png" : "/image-add.png"}
+            alt="add or update image"
             onClick={() => document.getElementById("file-input")?.click()}
             width={64}
             height={64}
@@ -228,14 +245,16 @@ export default function itemDetails() {
 
         {/* 메모 입력 */}
         <div className="memo-section">
-          <h3>Memo</h3>
           <div className="memo-container">
-            <textarea
-              value={memo}
-              onChange={handleMemoChange}
-              placeholder="메모를 추가하세요"
-              className="memo-textarea"
-            ></textarea>
+            <h3 className="memo-title">Memo</h3>
+            <div className="memo-text">
+              <textarea
+                value={memo}
+                onChange={handleMemoChange}
+                placeholder="메모를 추가하세요"
+                className="memo-textarea"
+              ></textarea>
+            </div>
           </div>
         </div>
       </div>
