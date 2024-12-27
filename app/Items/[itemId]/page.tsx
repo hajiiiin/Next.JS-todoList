@@ -3,7 +3,6 @@
 import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { TENANT_ID } from "../../TodoList/TodoList"; // TENANT_ID가 정의된 파일에서 import
 import "../items.styles.css";
 
 type TodoItem = {
@@ -14,6 +13,8 @@ type TodoItem = {
   imageUrl?: string;
 };
 
+const API_URL = `${process.env.NEXT_PUBLIC_BASE_URL}/${process.env.NEXT_PUBLIC_TENANT_ID}`;
+
 export default function itemDetails() {
   const router = useRouter();
   const { itemId } = useParams(); // 동적 경로에서 itemId 가져오기
@@ -23,8 +24,6 @@ export default function itemDetails() {
   const [uploadedImage, setUploadedImage] = useState<File | null>(null);
   const [isCompleted, setisCompleted] = useState(false);
   const [imageUrl, setImageUrl] = useState<string>(""); // imageUrl 상태 추가
-  // API URL
-  const API_URL = `https://assignment-todolist-api.vercel.app/api/${TENANT_ID}`;
 
   // 데이터 로드 (Get 요청)
   useEffect(() => {
