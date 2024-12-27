@@ -22,16 +22,16 @@ export default function itemDetails() {
   const [memo, setMemo] = useState("");
   const [uploadedImage, setUploadedImage] = useState<File | null>(null);
   const [isCompleted, setisCompleted] = useState(false);
-
+  const [imageUrl, setImageUrl] = useState<string>(""); // imageUrl 상태 추가
   // API URL
-  const API_URL = `https://assignment-todolist-api.vercel.app/api/${TENANT_ID}/items`;
+  const API_URL = `https://assignment-todolist-api.vercel.app/api/${TENANT_ID}`;
 
   // 데이터 로드 (Get 요청)
   useEffect(() => {
     const fetchTodo = async () => {
       try {
-        // Fetch 호출에 tenantId와 itemId를 정확히 포함
-        const response = await fetch(`${API_URL}/${itemId}`);
+        // Fetch 호출
+        const response = await fetch(`${API_URL}/items/${itemId}`);
         if (!response.ok) {
           throw new Error(
             `Failed to fetch item: ${response.status} ${response.statusText}`
@@ -41,6 +41,7 @@ export default function itemDetails() {
         const data = await response.json();
         setTodo(data); // 데이터 설정
         setMemo(data.memo || ""); // 메모 설정
+        setImageUrl(data.imageUrl || ""); // 이미지 url 설정
       } catch (error) {
         console.error(error); // 콘솔에 상세 오류 출력
         alert("할 일 정보를 가져오는 데 실패했습니다."); // 사용자에게 알림
@@ -60,10 +61,42 @@ export default function itemDetails() {
   // 이미지 파일 업로드
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setUploadedImage(file);
-      setisCompleted(true);
+    if (!file) return;
+
+    // 파일 이름 확인
+    if (!/^[a-zA-Z0-9_.-]+$/.test(file.name)) {
+      alert("파일 이름은 영어와 숫자만 포함되어야 합니다.");
+      return;
     }
+
+    // 파일 크기 확인
+    const maxFileSize = 5 * 1024 * 1024; // 5MB 제한
+    if (file.size > maxFileSize) {
+      alert("파일 크기가 너무 큽니다. 5MB 이하로 업로드하세요.");
+      return;
+    }
+
+    setUploadedImage(file);
+    setisCompleted(true);
+
+    // 이미지 업로드 처리
+    const formData = new FormData();
+    formData.append("image", file);
+
+    const uploadResponse = await fetch(`${API_URL}/images/upload`, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!uploadResponse.ok) {
+      const errorDetails = await uploadResponse.text(); // 서버 응답 메시지 확인
+      console.error("Image upload failed:", errorDetails);
+      return;
+    }
+
+    const uploadData = await uploadResponse.json();
+    console.log("Uploaded image URL:", uploadData.url);
+    setImageUrl(uploadData.url); // 이미지 URL 상태 설정
   };
 
   // 수정 핸들러
@@ -71,36 +104,26 @@ export default function itemDetails() {
     try {
       if (!todo) return;
 
-      let imageUrl = todo.imageUrl || "none";
+      let updatedImageUrl = imageUrl; // 현재 상태의 imageUrl 사용
 
-      // 이미지 업로드 처리
-      if (uploadedImage) {
-        const formData = new FormData();
-        formData.append("file", uploadedImage);
-        const uploadResponse = await fetch(`${API_URL}/images/upload`, {
-          method: "POST",
-          body: formData,
-        });
-        if (!uploadResponse.ok) throw new Error("Failed to upload image");
-        const uploadData = await uploadResponse.json();
-        imageUrl = uploadData.url;
-      }
-
-      console.log(todo.isCompleted); // 완료 여부 확인 출력용
+      console.log("Sending to PATCH:", {
+        name: todo.name,
+        memo,
+        imageUrl: updatedImageUrl,
+        isCompleted: todo.isCompleted,
+      });
 
       // 서버에 수정 요청
-      const response = await fetch(`${API_URL}/${itemId}`, {
+      const response = await fetch(`${API_URL}/items/${itemId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: todo.name,
           memo,
-          imageUrl,
+          imageUrl: updatedImageUrl,
           isCompleted: todo.isCompleted,
         }),
       });
-
-      console.log("memo 내용 출력: ", memo);
 
       if (!response.ok) throw new Error("Failed to update item");
       const updatedTodo = await response.json();
@@ -119,7 +142,7 @@ export default function itemDetails() {
   // 데이터 삭제
   const handleDelete = async () => {
     try {
-      const response = await fetch(`${API_URL}/${itemId}`, {
+      const response = await fetch(`${API_URL}/items/${itemId}`, {
         method: "DELETE",
       });
       if (!response.ok) throw new Error("Failed to delete item");
@@ -143,7 +166,7 @@ export default function itemDetails() {
       setTodo({ ...todo, isCompleted: updatedIsCompleted });
 
       // 서버에 상태 업데이트 요청 (PATCH)
-      const response = await fetch(`${API_URL}/${itemId}`, {
+      const response = await fetch(`${API_URL}/items/${itemId}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -201,10 +224,10 @@ export default function itemDetails() {
         <div
           className="image-section"
           style={{
-            backgroundImage: uploadedImage
-              ? `url(${URL.createObjectURL(uploadedImage)})`
-              : todo.imageUrl
-              ? `url(${todo.imageUrl})`
+            backgroundImage: imageUrl
+              ? `url(${imageUrl})`
+              : todo?.imageUrl
+              ? `url(${todo.imageUrl})` // 서버에서 가져온 이미지 URL
               : "",
             backgroundSize: "cover",
             display: "flex",
@@ -221,11 +244,12 @@ export default function itemDetails() {
             }
             alt="Uploaded"
             style={{
-              display: !uploadedImage ? "block" : "none", // 조건에 따라 표시 여부 설정
+              display: !imageUrl ? "block" : "none", // 조건에 따라 표시 여부 설정
               width: 64,
               height: 64,
             }}
           />
+
           {/* 숨겨진 파일 입력 */}
           <input
             type="file"
@@ -262,7 +286,7 @@ export default function itemDetails() {
       {/* 버튼 그룹 */}
       <div className="button-group">
         <Image
-          onClick={isCompleted ? handleSave : undefined}
+          onClick={handleSave}
           src={isCompleted ? "/save-icon-active.png" : "/save-icon.png"}
           alt="Save"
           width={168}
