@@ -4,7 +4,7 @@ import { useRouter, useParams  } from "next/navigation";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { TENANT_ID } from "../../TodoList/TodoList"; // TENANT_ID가 정의된 파일에서 import
-import "../Items.styles.css";
+import "../items.styles.css";
 
 type TodoItem = {
   id: string;
@@ -14,7 +14,7 @@ type TodoItem = {
   imageUrl?: string;
 };
 
-export default function ItemDetails() {
+export default function itemDetails() {
   const router = useRouter();
   const { itemId } = useParams(); // 동적 경로에서 itemId 가져오기
   
