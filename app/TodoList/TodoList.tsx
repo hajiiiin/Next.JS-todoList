@@ -105,7 +105,7 @@ export default function TodoList() {
   };
 
   const handleTodoClick = (itemId: number) => {
-    router.push(`/Items/${itemId}`);
+    router.push(`/items/${itemId}`);
   };
 
   return (

@@ -31,7 +31,7 @@ export default function itemDetails() {
     const fetchTodo = async () => {
       try {
         // Fetch 호출에 tenantId와 itemId를 정확히 포함
-        const response = await fetch(`${API_URL}/items/${itemId}`);
+        const response = await fetch(`${API_URL}/${itemId}`);
         if (!response.ok) {
           throw new Error(`Failed to fetch item: ${response.status} ${response.statusText}`);
         }
@@ -83,7 +83,7 @@ export default function itemDetails() {
         imageUrl = uploadData.url;
       }
       console.log(todo.isCompleted);
-      const response = await fetch(`${API_URL}/items/${itemId}`, {
+      const response = await fetch(`${API_URL}/${itemId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: todo.name, memo : memo || "none", imageUrl, isCompleted: todo.isCompleted }),
@@ -103,7 +103,7 @@ export default function itemDetails() {
   // 데이터 삭제
   const handleDelete = async () => {
     try {
-      const response = await fetch(`${API_URL}/items/${itemId}`, { method: "DELETE" });
+      const response = await fetch(`${API_URL}/${itemId}`, { method: "DELETE" });
       if (!response.ok) throw new Error("Failed to delete item");
       alert("삭제되었습니다.");
       router.push("/");
