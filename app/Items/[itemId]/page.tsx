@@ -196,30 +196,47 @@ export default function itemDetails() {
         </label>
       </div>
 
-      {/* 이미지 업로드 */}
-      <div>
-        <img
-          src={
-            uploadedImage
-              ? URL.createObjectURL(uploadedImage)
-              : todo.imageUrl || "/default-image.png"
-          }
-          alt="Uploaded"
-          style={{ width: 200, height: 200 }}
-        />
-        <input type="file" onChange={handleFileChange} />
-      </div>
+      <div className="details-container">
+        {/* 이미지 업로드 */}
+        <div className="image-section">
+          <img
+            className="img-section-img"
+            src={
+              uploadedImage
+                ? URL.createObjectURL(uploadedImage)
+                : todo.imageUrl || "/default-image.png"
+            }
+            alt="Uploaded"
+            style={{ width: 64, height: 64 }}
+          />
+          {/* 숨겨진 파일 입력 */}
+          <input
+            type="file"
+            id="file-input"
+            style={{ display: "none" }} // 숨김 처리
+            onChange={handleFileChange} // 파일 변경 시 호출
+          />
+          <Image
+            className="add-image-btn"
+            src="/add-image-btn.png"
+            alt="add image"
+            onClick={() => document.getElementById("file-input")?.click()}
+            width={64}
+            height={64}
+          />
+        </div>
 
-      {/* 메모 입력 */}
-      <div className="memo-section">
-        <h3>Memo</h3>
-        <div className="memo-container">
-          <textarea
-            value={memo}
-            onChange={handleMemoChange}
-            placeholder="메모를 추가하세요"
-            className="memo-textarea"
-          ></textarea>
+        {/* 메모 입력 */}
+        <div className="memo-section">
+          <h3>Memo</h3>
+          <div className="memo-container">
+            <textarea
+              value={memo}
+              onChange={handleMemoChange}
+              placeholder="메모를 추가하세요"
+              className="memo-textarea"
+            ></textarea>
+          </div>
         </div>
       </div>
 

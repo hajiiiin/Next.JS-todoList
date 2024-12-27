@@ -33,12 +33,38 @@
   gap: 20px;
 }
 
-.image-upload {
-  flex: 1;
+.details-container {
+  display: flex;
+  gap: 20px; /* 이미지와 메모 섹션 사이 간격 */
+  align-items: center; /* 이미지와 메모를 세로로 중앙 정렬 */
+  /*justify-content: space-between;  공간을 균등하게 나눔 */
+  padding: 20px;
+}
+
+.image-section {
+  display: flex; /* Flexbox 활성화 */
+  justify-content: center; /* 가로 방향 가운데 정렬 */
+  align-items: center; /* 세로 방향 가운데 정렬 */
   text-align: center;
+  border: 2px dashed #ccc;
+  border-radius: 12px;
+  background-color: #f9f9f9;
+  width: 384px;
+  height: 311px;
+  position: relative;
+}
+
+.add-image-btn {
+  position: absolute; /* 절대 위치 설정 */
+  bottom: 10px; /* 아래쪽 간격 */
+  right: 10px; /* 오른쪽 간격 */
+  width: 64px; /* 버튼 크기 */
+  height: 64px; /* 버튼 크기 */
+  cursor: pointer; /* 클릭 가능한 커서 */
 }
 
 .memo-container {
+  flex: 2;
   position: relative;
   width: 100%;
   height: 200px;
@@ -68,7 +94,8 @@
 
 .button-group {
   display: flex;
-  justify-content: space-between;
+  justify-content: end;
+  gap: 20px;
   margin-top: 20px;
 }
 
