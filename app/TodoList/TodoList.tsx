@@ -82,9 +82,6 @@ export default function TodoList() {
         throw new Error("Failed to fetch updated todos");
       }
   
-      // const updatedTodos = await response.json();
-      // setTodos(updatedTodos); // 로컬 상태 업데이트
-
       // 서버 동기화
       await fetch(API_URL, {
         method: "POST",

@@ -1,72 +1,67 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useParams  } from "next/navigation";
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { TENANT_ID } from "../../TodoList/TodoList"; // TENANT_ID가 정의된 파일에서 import
 import "../Items.styles.css";
 
 type TodoItem = {
   id: string;
-  text: string;
+  name: string;
   isCompleted: boolean;
   memo?: string;
-  image?: string;
+  imageUrl?: string;
 };
 
-export default function ItemDetails({
-  params,
-}: {
-  params: { itemId: string };
-}) {
+export default function ItemDetails() {
   const router = useRouter();
-  //const searchParams = useSearchParams();
-  const itemId = params.itemId;
-
+  const { itemId } = useParams(); // 동적 경로에서 itemId 가져오기
+  
   const [todo, setTodo] = useState<TodoItem | null>(null);
   const [memo, setMemo] = useState("");
   const [uploadedImage, setUploadedImage] = useState<File | null>(null);
-  const [isModified, setIsModified] = useState(false);
+  const [isCompleted, setisCompleted] = useState(false);
 
   // API URL
   const API_URL = `https://assignment-todolist-api.vercel.app/api/${TENANT_ID}/items`;
   
-  // 데이터 로드
+  // 데이터 로드 (Get 요청)
   useEffect(() => {
     const fetchTodo = async () => {
       try {
+        // Fetch 호출에 tenantId와 itemId를 정확히 포함
         const response = await fetch(`${API_URL}/items/${itemId}`);
-        if (!response.ok) throw new Error("Failed to fetch item");
+        if (!response.ok) {
+          throw new Error(`Failed to fetch item: ${response.status} ${response.statusText}`);
+        }
+  
         const data = await response.json();
-        setTodo(data);
-        setMemo(data.memo || "");
+        setTodo(data); // 데이터 설정
+        setMemo(data.memo || ""); // 메모 설정
       } catch (error) {
-        console.error(error);
-        router.push("/"); // 에러 시 홈으로 리다이렉트
+        console.error(error); // 콘솔에 상세 오류 출력
+        alert("할 일 정보를 가져오는 데 실패했습니다."); // 사용자에게 알림
+        router.push("/"); // 오류 발생 시 홈으로 이동
       }
     };
-
+  
     fetchTodo();
   }, [itemId, router]);
 
   // 메모 변경 감지
   const handleMemoChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setMemo(e.target.value);
-    setIsModified(true);
+    setisCompleted(true); // 메모 변경 시 수정 완료 버튼 활성화
   };
 
-  // 이미지 업로드
-  const uploadImage = async (file: File): Promise<string> => {
-    const formData = new FormData();
-    formData.append("file", file);
-
-    const response = await fetch(`${API_URL}/images/upload`, {
-      method: "POST",
-      body: formData,
-    });
-
-    if (!response.ok) throw new Error("Failed to upload image");
-    const data = await response.json();
-    return data.url;
+  // 이미지 파일 업로드
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setUploadedImage(file);
+      setisCompleted(true);
+    }
   };
 
   // 수정 핸들러
@@ -74,28 +69,30 @@ export default function ItemDetails({
     try {
       if (!todo) return;
 
-      let imageUrl = todo.imageUrl;
+      let imageUrl = todo.imageUrl || "none";
+      
       if (uploadedImage) {
-        imageUrl = await uploadImage(uploadedImage);
+        const formData = new FormData();
+        formData.append("file", uploadedImage);
+        const uploadResponse = await fetch(`${API_URL}/images/upload`, {
+          method: "POST",
+          body: formData,
+        });
+        if (!uploadResponse.ok) throw new Error("Failed to upload image");
+        const uploadData = await uploadResponse.json();
+        imageUrl = uploadData.url;
       }
-
+      console.log(todo.isCompleted);
       const response = await fetch(`${API_URL}/items/${itemId}`, {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: todo.name,
-          memo,
-          imageUrl,
-          isCompleted: todo.isCompleted,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: todo.name, memo : memo || "none", imageUrl, isCompleted: todo.isCompleted }),
       });
 
       if (!response.ok) throw new Error("Failed to update item");
       const updatedTodo = await response.json();
       setTodo(updatedTodo);
-      setIsModified(false);
+      setisCompleted(false);
       alert("수정되었습니다.");
     } catch (error) {
       console.error(error);
@@ -103,14 +100,10 @@ export default function ItemDetails({
     }
   };
 
-
-  // 삭제 핸들러
+  // 데이터 삭제
   const handleDelete = async () => {
     try {
-      const response = await fetch(`${API_URL}/items/${itemId}`, {
-        method: "DELETE",
-      });
-
+      const response = await fetch(`${API_URL}/items/${itemId}`, { method: "DELETE" });
       if (!response.ok) throw new Error("Failed to delete item");
       alert("삭제되었습니다.");
       router.push("/");
@@ -126,7 +119,7 @@ export default function ItemDetails({
     <div className="item-details-container">
       <div key={todo.id} className="todo-item">
         <label>
-          <Image src="/todo-checkbox.png" alt="Save" width={32} height={32} />
+          <Image src="/todo-checkbox.png" alt="Checkbox" width={32} height={32} />
           {todo.name}
         </label>
       </div>
@@ -134,11 +127,7 @@ export default function ItemDetails({
       {/* 이미지 업로드 */}
       <div>
         <img
-          src={
-            uploadedImage
-              ? URL.createObjectURL(uploadedImage)
-              : todo.image || "/default-image.png"
-          }
+          src={uploadedImage ? URL.createObjectURL(uploadedImage) : todo.imageUrl || "/default-image.png"}
           alt="Uploaded"
           style={{ width: 200, height: 200 }}
         />
@@ -151,7 +140,7 @@ export default function ItemDetails({
         <div className="memo-container">
           <textarea
             value={memo}
-            onChange={(e) => setMemo(e.target.value)}
+            onChange={handleMemoChange}
             placeholder="메모를 추가하세요"
             className="memo-textarea"
           ></textarea>
@@ -161,24 +150,18 @@ export default function ItemDetails({
       {/* 버튼 그룹 */}
       <div className="button-group">
         <Image
-          onClick={isModified ? handleSave : undefined} // 수정 완료 버튼 클릭 가능 조건
-          src={isModified ? "/save-icon-active.png" : "/save-icon.png"} // 활성화 여부에 따라 이미지 변경
+          onClick={isCompleted ? handleSave : undefined}
+          src={isCompleted ? "/save-icon-active.png" : "/save-icon.png"}
           alt="Save"
           width={168}
           height={56}
           style={{
-            cursor: isModified ? "pointer" : "not-allowed",
-            opacity: isModified ? 1 : 0.5,
+            cursor: isCompleted ? "pointer" : "not-allowed",
+            opacity: isCompleted ? 1 : 0.5,
           }}
         />
 
-        <Image
-          onClick={handleDelete}
-          src="/delete-icon.png"
-          alt="Delete"
-          width={168}
-          height={56}
-        />
+        <Image onClick={handleDelete} src="/delete-icon.png" alt="Delete" width={168} height={56} />
       </div>
     </div>
   );
