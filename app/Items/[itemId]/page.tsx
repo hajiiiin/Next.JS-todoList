@@ -1,13 +1,13 @@
 "use client";
 
-import { useRouter, useParams  } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { TENANT_ID } from "../../TodoList/TodoList"; // TENANT_ID가 정의된 파일에서 import
 import "../items.styles.css";
 
 type TodoItem = {
-  id: string;
+  id: number;
   name: string;
   isCompleted: boolean;
   memo?: string;
@@ -17,15 +17,16 @@ type TodoItem = {
 export default function itemDetails() {
   const router = useRouter();
   const { itemId } = useParams(); // 동적 경로에서 itemId 가져오기
-  
+
   const [todo, setTodo] = useState<TodoItem | null>(null);
+  const [todos, setTodos] = useState<TodoItem[]>([]);
   const [memo, setMemo] = useState("");
   const [uploadedImage, setUploadedImage] = useState<File | null>(null);
   const [isCompleted, setisCompleted] = useState(false);
 
   // API URL
   const API_URL = `https://assignment-todolist-api.vercel.app/api/${TENANT_ID}/items`;
-  
+
   // 데이터 로드 (Get 요청)
   useEffect(() => {
     const fetchTodo = async () => {
@@ -33,9 +34,11 @@ export default function itemDetails() {
         // Fetch 호출에 tenantId와 itemId를 정확히 포함
         const response = await fetch(`${API_URL}/${itemId}`);
         if (!response.ok) {
-          throw new Error(`Failed to fetch item: ${response.status} ${response.statusText}`);
+          throw new Error(
+            `Failed to fetch item: ${response.status} ${response.statusText}`
+          );
         }
-  
+
         const data = await response.json();
         setTodo(data); // 데이터 설정
         setMemo(data.memo || ""); // 메모 설정
@@ -45,7 +48,7 @@ export default function itemDetails() {
         router.push("/"); // 오류 발생 시 홈으로 이동
       }
     };
-  
+
     fetchTodo();
   }, [itemId, router]);
 
@@ -70,7 +73,8 @@ export default function itemDetails() {
       if (!todo) return;
 
       let imageUrl = todo.imageUrl || "none";
-      
+
+      // 이미지 업로드 처리
       if (uploadedImage) {
         const formData = new FormData();
         formData.append("file", uploadedImage);
@@ -82,18 +86,31 @@ export default function itemDetails() {
         const uploadData = await uploadResponse.json();
         imageUrl = uploadData.url;
       }
-      console.log(todo.isCompleted);
+
+      console.log(todo.isCompleted); // 완료 여부 확인 출력용
+
+      // 서버에 수정 요청
       const response = await fetch(`${API_URL}/${itemId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: todo.name, memo : memo || "none", imageUrl, isCompleted: todo.isCompleted }),
+        body: JSON.stringify({
+          name: todo.name,
+          memo,
+          imageUrl,
+          isCompleted: todo.isCompleted,
+        }),
       });
+
+      console.log("memo 내용 출력: ", memo);
 
       if (!response.ok) throw new Error("Failed to update item");
       const updatedTodo = await response.json();
+
+      // 클라이언트 상태 업데이트
       setTodo(updatedTodo);
       setisCompleted(false);
       alert("수정되었습니다.");
+      router.push("/");
     } catch (error) {
       console.error(error);
       alert("수정 중 오류가 발생했습니다.");
@@ -103,13 +120,57 @@ export default function itemDetails() {
   // 데이터 삭제
   const handleDelete = async () => {
     try {
-      const response = await fetch(`${API_URL}/${itemId}`, { method: "DELETE" });
+      const response = await fetch(`${API_URL}/${itemId}`, {
+        method: "DELETE",
+      });
       if (!response.ok) throw new Error("Failed to delete item");
       alert("삭제되었습니다.");
       router.push("/");
+      router.refresh(); // 최신 데이터 반영
     } catch (error) {
       console.error(error);
       alert("삭제 중 오류가 발생했습니다.");
+    }
+  };
+
+  // 상태 변경 핸들러 (POST 요청)
+  const toggleTaskStatus = async (id: number) => {
+    try {
+      const todo = todos.find((todo) => todo.id === id);
+      if (!todo) return;
+
+      const updatedIsCompleted = !todo.isCompleted; // 상태 반전
+      const previousTodos = [...todos]; // 요청 전 상태 저장
+
+      // 로컬 상태에서 반전 처리
+      setTodos((prev) =>
+        prev.map((t) =>
+          t.id === id ? { ...t, isCompleted: !todo.isCompleted } : t
+        )
+      );
+
+      // 서버에 상태 업데이트 요청 (PATCH)
+      const response = await fetch(`${API_URL}/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: todo.name,
+          memo: todo.memo,
+          imageUrl: todo.imageUrl,
+          isCompleted: updatedIsCompleted,
+        }),
+      });
+
+      console.log("상태 확인: ", isCompleted);
+
+      // 최신 데이터 가져오기
+      const updatedTodo = await response.json();
+      setTodos((prev) => prev.map((t) => (t.id === id ? updatedTodo : t)));
+    } catch (error) {
+      console.error("Error in toggleTaskStatus:", error);
+      alert("작업 상태를 업데이트하는 동안 오류가 발생했습니다.");
     }
   };
 
@@ -119,15 +180,34 @@ export default function itemDetails() {
     <div className="item-details-container">
       <div key={todo.id} className="todo-item">
         <label>
-          <Image src="/todo-checkbox.png" alt="Checkbox" width={32} height={32} />
-          {todo.name}
+          <Image
+            src={todo.isCompleted ? "/done-checkbox.png" : "/todo-checkbox.png"}
+            alt={todo.isCompleted ? "Done" : "Todo"}
+            width={32}
+            height={32}
+            onClick={() => {
+              console.log("Checkbox clicked:", todo.isCompleted); // 디버깅용 출력
+              toggleTaskStatus(todo.id);
+            }}
+          />
+          <span
+            style={{
+              textDecoration: todo.isCompleted ? "line-through" : "none",
+            }}
+          >
+            {todo.name}
+          </span>
         </label>
       </div>
 
       {/* 이미지 업로드 */}
       <div>
         <img
-          src={uploadedImage ? URL.createObjectURL(uploadedImage) : todo.imageUrl || "/default-image.png"}
+          src={
+            uploadedImage
+              ? URL.createObjectURL(uploadedImage)
+              : todo.imageUrl || "/default-image.png"
+          }
           alt="Uploaded"
           style={{ width: 200, height: 200 }}
         />
@@ -161,7 +241,13 @@ export default function itemDetails() {
           }}
         />
 
-        <Image onClick={handleDelete} src="/delete-icon.png" alt="Delete" width={168} height={56} />
+        <Image
+          onClick={handleDelete}
+          src="/delete-icon.png"
+          alt="Delete"
+          width={168}
+          height={56}
+        />
       </div>
     </div>
   );
