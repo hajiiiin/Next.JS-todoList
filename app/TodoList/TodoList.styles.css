@@ -103,39 +103,6 @@
   display: none;
 }
 
-/* 커스텀 체크박스 컨테이너 */
-.checkbox-custom {
-  width: 30px;
-  height: 30px;
-  border: 2px solid #333;
-  border-radius: 50%;
-  background-color: #fcf8df;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-/* 체크된 상태 스타일 */
-input[type="checkbox"]:checked + .checkbox-custom {
-  background-color: #7c3aed; /* 체크 시 배경색 (녹색) */
-  border-color: #7c3aed;
-}
-
-/* 체크박스 내부 아이콘 (체크 표시) */
-.checkbox-custom::after {
-  content: "✔"; /* 체크 표시 */
-  font-size: 14px;
-  color: white;
-  display: none; /* 기본 숨기기 */
-}
-
-/* 체크된 상태에서 체크 표시 보이기 */
-input[type="checkbox"]:checked + .checkbox-custom::after {
-  display: block;
-}
-
 .done-item label {
   display: inline-flex; /* 가로 정렬 */
   align-items: center; /* 수직 가운데 정렬 */

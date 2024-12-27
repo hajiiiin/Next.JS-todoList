@@ -19,7 +19,6 @@ export default function itemDetails() {
   const { itemId } = useParams(); // 동적 경로에서 itemId 가져오기
 
   const [todo, setTodo] = useState<TodoItem | null>(null);
-  const [todos, setTodos] = useState<TodoItem[]>([]);
   const [memo, setMemo] = useState("");
   const [uploadedImage, setUploadedImage] = useState<File | null>(null);
   const [isCompleted, setisCompleted] = useState(false);
@@ -134,23 +133,17 @@ export default function itemDetails() {
   };
 
   // 상태 변경 핸들러 (POST 요청)
-  const toggleTaskStatus = async (id: number) => {
+  const toggleTaskStatus = async () => {
+    if (!todo) return; // 현재 todo가 없으면 종료
+
     try {
-      const todo = todos.find((todo) => todo.id === id);
-      if (!todo) return;
-
       const updatedIsCompleted = !todo.isCompleted; // 상태 반전
-      const previousTodos = [...todos]; // 요청 전 상태 저장
 
-      // 로컬 상태에서 반전 처리
-      setTodos((prev) =>
-        prev.map((t) =>
-          t.id === id ? { ...t, isCompleted: !todo.isCompleted } : t
-        )
-      );
+      // 로컬 상태 반전
+      setTodo({ ...todo, isCompleted: updatedIsCompleted });
 
       // 서버에 상태 업데이트 요청 (PATCH)
-      const response = await fetch(`${API_URL}/${id}`, {
+      const response = await fetch(`${API_URL}/${itemId}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -163,11 +156,10 @@ export default function itemDetails() {
         }),
       });
 
-      console.log("상태 확인: ", isCompleted);
+      if (!response.ok) throw new Error("Failed to update status");
 
-      // 최신 데이터 가져오기
       const updatedTodo = await response.json();
-      setTodos((prev) => prev.map((t) => (t.id === id ? updatedTodo : t)));
+      setTodo(updatedTodo); // 서버 응답으로 상태 업데이트
     } catch (error) {
       console.error("Error in toggleTaskStatus:", error);
       alert("작업 상태를 업데이트하는 동안 오류가 발생했습니다.");
@@ -178,21 +170,25 @@ export default function itemDetails() {
 
   return (
     <div className="item-details-container">
-      <div key={todo.id} className="todo-item">
-        <label>
+      <div
+        key={todo.id}
+        className={`todo-item ${todo.isCompleted ? "completed" : "pending"}`}
+      >
+        <label className="todo-label">
           <Image
             src={todo.isCompleted ? "/done-checkbox.png" : "/todo-checkbox.png"}
             alt={todo.isCompleted ? "Done" : "Todo"}
             width={32}
             height={32}
             onClick={() => {
-              console.log("Checkbox clicked:", todo.isCompleted); // 디버깅용 출력
-              toggleTaskStatus(todo.id);
+              console.log("Before toggle:", todo.isCompleted); // 클릭 전 상태
+              toggleTaskStatus();
             }}
           />
           <span
             style={{
-              textDecoration: todo.isCompleted ? "line-through" : "none",
+              textDecoration: todo.isCompleted ? "underline" : "none",
+              textAlign: "center",
             }}
           >
             {todo.name}

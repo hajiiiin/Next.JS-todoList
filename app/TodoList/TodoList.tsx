@@ -212,7 +212,7 @@ export default function TodoList() {
                     <div key={todo.id} className="done-item">
                       <label>
                         <Image
-                          src={"/todo-checkbox.png"}
+                          src={"/done-check.png"}
                           alt="Empty TODO"
                           width={30}
                           height={30}
